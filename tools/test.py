@@ -134,6 +134,35 @@ def repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir
             print('%s' % cur_epoch_id, file=f)
         logger.info('Epoch %s has been evaluated' % cur_epoch_id)
 
+def custome_repeat_eval_ckpt(model, test_loader, args, eval_output_dir, logger, ckpt_dir, dist_test=False):
+    # evaluated ckpt record
+
+
+    # tensorboard log
+    if cfg.LOCAL_RANK == 0:
+        tb_log = SummaryWriter(log_dir=str(eval_output_dir / ('tensorboard_%s' % cfg.DATA_CONFIG.DATA_SPLIT['test'])))
+
+    ckpt_list=glob.glob(os.path.join(ckpt_dir, '*checkpoint_epoch_*.pth'))
+    print(ckpt_list)
+    for cur_ckpt in ckpt_list:
+
+        cur_epoch_id=cur_ckpt.split('/')[-1].split('_')[-1].split('.')[0]
+        model.load_params_from_file(filename=cur_ckpt, logger=logger, to_cpu=dist_test)
+        model.cuda()
+
+        # start evaluation
+        cur_result_dir = eval_output_dir / ('epoch_%s' % cur_epoch_id) / cfg.DATA_CONFIG.DATA_SPLIT['test']
+        tb_dict = eval_utils.eval_one_epoch(
+            cfg, args, model, test_loader, cur_epoch_id, logger, dist_test=dist_test,
+            result_dir=cur_result_dir
+        )
+
+        if cfg.LOCAL_RANK == 0:
+            for key, val in tb_dict.items():
+                tb_log.add_scalar(key, val, cur_epoch_id)
+
+
+        logger.info('Epoch %s has been evaluated' % cur_epoch_id)
 
 def main():
     args, cfg = parse_config()

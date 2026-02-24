@@ -15,3 +15,15 @@ venv/
 *.bin
 output
 version.py
+
+# Local custom datasets and generated artifacts (not for code-only repo push)
+Individual_Tree_Segmentation/
+tools/Final_Npy_Results/
+tools/Npy_Results/
+tools/Andys Forest/
+tools/Carsten_OAK/
+tools/China_Chenzhou/
+tools/China_Guangxi_Slice/
+tools/China_NorthEast/
+tools/Normalize/
+tools/inference_outputs/
